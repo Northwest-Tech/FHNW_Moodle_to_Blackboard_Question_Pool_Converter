@@ -182,6 +182,26 @@ const dropZone = document.getElementById('dropZone');
             }
         }
 
+        class ShortAnswerQuestion{
+            constructor(name, text, generalFeedback, defaultGrade) {
+                this.name = name;
+                this.text = text;
+                this.generalFeedback = generalFeedback;
+                this.defaultGrade = defaultGrade;
+                this.answers = []; // array of {text: "", fraction: 100 or 0, feedback: ""}
+            }
+
+            addAnswer(text, fraction) {
+                this.answers.push({"text":text, "fraction":fraction});
+            }
+
+            getBBXMLText() {
+                return `
+                TODO 
+                `
+            }
+        }
+
 
         function readTextFile(file) {
             const reader = new FileReader();
@@ -224,6 +244,22 @@ const dropZone = document.getElementById('dropZone');
                     });
 
                     allQuestions.push(mcQuestion);
+                });
+
+                let shortAnswerQuestions = Array.from(questions).filter(q => q.getAttribute("type") === "shortanswer"); 
+                shortAnswerQuestions.forEach(q => {
+                    let name = q.querySelector("name > text").textContent;
+                    let text = q.querySelector("questiontext > text").textContent;
+                    let generalFeedback = q.querySelector("generalfeedback > text") ? q.querySelector("generalfeedback > text").textContent : "";
+                    let defaultGrade = q.getAttribute("defaultgrade") || "0";
+                    let shortAnswerQuestion = new ShortAnswerQuestion(name, text, generalFeedback, defaultGrade);
+                    let answers = q.querySelectorAll("answer");
+                    answers.forEach(a => {
+                        let answerText = a.querySelector("text").textContent;
+                        let fraction = parseFloat(a.getAttribute("fraction")) || 0;
+                        shortAnswerQuestion.addAnswer(answerText, fraction);
+                    });
+                    allQuestions.push(shortAnswerQuestion);
                 });
 
                 console.log(allQuestions);
