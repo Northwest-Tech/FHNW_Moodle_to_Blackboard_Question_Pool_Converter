@@ -159,6 +159,29 @@ const dropZone = document.getElementById('dropZone');
             }
         }
 
+        class MultipleChoiceQuestion{
+            constructor(name, text, generalFeedback, defaultGrade, penalty, single, shuffleAnswers) {
+                this.name = name;
+                this.text = text;
+                this.generalFeedback = generalFeedback;
+                this.defaultGrade = defaultGrade;
+                this.penalty = penalty;
+                this.single = single; // true or false
+                this.shuffleAnswers = shuffleAnswers; // true or false
+                this.answers = []; // array of {text: "", fraction: 100 or 0, feedback: ""}
+            }
+
+            addAnswer(text, fraction) {
+                this.answers.push({"text":text, "fraction":fraction});
+            }
+
+            getBBXMLText() {
+                let beginning = ` 
+                  Todo add stuff 
+                `
+            }
+        }
+
 
         function readTextFile(file) {
             const reader = new FileReader();
@@ -182,8 +205,31 @@ const dropZone = document.getElementById('dropZone');
                     allQuestions.push(essayQuestion);
                 });
 
+                let MultipleChoiceQuestions = Array.from(questions).filter(q => q.getAttribute("type") === "multichoice");
+                MultipleChoiceQuestions.forEach(q => {
+                    let name = q.querySelector("name > text").textContent;
+                    let text = q.querySelector("questiontext > text").textContent;
+                    let generalFeedback = q.querySelector("generalfeedback > text") ? q.querySelector("generalfeedback > text").textContent : "";
+                    let defaultGrade = q.getAttribute("defaultgrade") || "0";
+                    let penalty = q.getAttribute("penalty") || "0";
+                    let single = q.getAttribute("single") === "true";
+                    let shuffleAnswers = q.getAttribute("shuffleanswers") === "true";
+                    let mcQuestion = new MultipleChoiceQuestion(name, text, generalFeedback, defaultGrade, penalty, single, shuffleAnswers);
+                    
+                    let answers = q.querySelectorAll("answer");
+                    answers.forEach(a => {
+                        let answerText = a.querySelector("text").textContent;
+                        let fraction = parseFloat(a.getAttribute("fraction")) || 0;
+                        mcQuestion.addAnswer(answerText, fraction);
+                    });
+
+                    allQuestions.push(mcQuestion);
+                });
+
+                console.log(allQuestions);
+
             };
-            
+    
             reader.onerror = (e) => {
                 console.error('Error reading file:', e);
             };
