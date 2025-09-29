@@ -202,6 +202,26 @@ const dropZone = document.getElementById('dropZone');
             }
         }
 
+        class TrueFalseQuestion{
+            constructor(name, text, generalFeedback, defaultGrade) {
+                this.name = name;
+                this.text = text;
+                this.generalFeedback = generalFeedback;
+                this.defaultGrade = defaultGrade;
+                this.answers = []; // array of {text: "", fraction: 100 or 0, feedback: ""}
+            }
+
+            addAnswer(text, fraction) {
+                this.answers.push({"text":text, "fraction":fraction});
+            }
+
+            getBBXMLText() {
+                return `
+                TODO 
+                `
+            }
+        }
+
 
         function readTextFile(file) {
             const reader = new FileReader();
@@ -260,6 +280,22 @@ const dropZone = document.getElementById('dropZone');
                         shortAnswerQuestion.addAnswer(answerText, fraction);
                     });
                     allQuestions.push(shortAnswerQuestion);
+                });
+
+                let trueFalseQuestions = Array.from(questions).filter(q => q.getAttribute("type") === "truefalse");
+                trueFalseQuestions.forEach(q => {
+                    let name = q.querySelector("name > text").textContent;
+                    let text = q.querySelector("questiontext > text").textContent;
+                    let generalFeedback = q.querySelector("generalfeedback > text") ? q.querySelector("generalfeedback > text").textContent : "";
+                    let defaultGrade = q.getAttribute("defaultgrade") || "0";
+                    let tfQuestion = new TrueFalseQuestion(name, text, generalFeedback, defaultGrade);
+                    let answers = q.querySelectorAll("answer");
+                    answers.forEach(a => {
+                        let answerText = a.querySelector("text").textContent;
+                        let fraction = parseFloat(a.getAttribute("fraction")) || 0;
+                        tfQuestion.addAnswer(answerText, fraction);
+                    });
+                    allQuestions.push(tfQuestion);
                 });
 
                 console.log(allQuestions);
