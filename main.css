@@ -1,0 +1,48 @@
+ body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #f0f0f0;
+            flex-direction: column;
+            background-image: url('./assets/background.png');
+            background-position: center;
+        }
+
+        .drop-zone {
+            width: 600px;
+            height: 500px;
+            border: 3px dashed #ccc;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .drop-zone:hover {
+            border-color: #999;
+            background: #fafafa;
+        }
+
+        .drop-zone.drag-over {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+        }
+
+        .drop-zone p {
+            margin: 10px 0;
+            color: #666;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .icon {
+            font-size: 48px;
+            color: #999;
+        }
