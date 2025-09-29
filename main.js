@@ -172,7 +172,7 @@ const dropZone = document.getElementById('dropZone');
             }
 
             addAnswer(text, fraction) {
-                this.answers.push({"text":text, "fraction":fraction});
+                this.answers.push({'text': text, 'fraction': fraction});
             }
 
             getBBXMLText() {
@@ -202,17 +202,37 @@ const dropZone = document.getElementById('dropZone');
             }
         }
 
-        class TrueFalseQuestion{
+        class TrueFalseQuestion {
             constructor(name, text, generalFeedback, defaultGrade) {
                 this.name = name;
                 this.text = text;
                 this.generalFeedback = generalFeedback;
                 this.defaultGrade = defaultGrade;
-                this.answers = []; // array of {text: "", fraction: 100 or 0, feedback: ""}
+                this.answers = []; // array of {text: "", fraction: 100 or 0}
             }
 
             addAnswer(text, fraction) {
                 this.answers.push({"text":text, "fraction":fraction});
+            }
+
+            getBBXMLText() {
+                return `
+                TODO 
+                `
+            }
+        }
+
+        class MatchingQuestion{
+            constructor(name, text, generalFeedback, defaultGrade) {
+                this.name = name;
+                this.text = text;
+                this.generalFeedback = generalFeedback;
+                this.defaultGrade = defaultGrade;
+                this.pairs = []; // array of {question: "", answer: ""}
+            }
+
+            addPair(question, answer) {
+                this.pairs.push({"question":question, "answer":answer});
             }
 
             getBBXMLText() {
@@ -296,6 +316,38 @@ const dropZone = document.getElementById('dropZone');
                         tfQuestion.addAnswer(answerText, fraction);
                     });
                     allQuestions.push(tfQuestion);
+                });
+
+                let matchingQuestions = Array.from(questions).filter(q => q.getAttribute("type") === "matching");
+                matchingQuestions.forEach(q => {
+                    let name = q.querySelector("name > text").textContent;
+                    let text = q.querySelector("questiontext > text").textContent;
+                    let generalFeedback = q.querySelector("generalfeedback > text") ? q.querySelector("generalfeedback > text").textContent : "";
+                    let defaultGrade = q.getAttribute("defaultgrade") || "0";
+                    let matchQuestion = new MatchingQuestion(name, text, generalFeedback, defaultGrade);
+                    let subquestions = q.querySelectorAll("subquestion");
+                    subquestions.forEach(sq => {
+                        let questionText = sq.querySelector("text").textContent;
+                        let answerText = sq.querySelector("answer").textContent;
+                        matchQuestion.addPair(questionText, answerText);
+                    });
+                    allQuestions.push(matchQuestion);
+                });
+
+                let dragAndDropMatchingQuestions = Array.from(questions).filter(q => q.getAttribute("type") === "ddmatch");
+                dragAndDropMatchingQuestions.forEach(q => {
+                    let name = q.querySelector("name > text").textContent;
+                    let text = q.querySelector("questiontext > text").textContent;
+                    let generalFeedback = q.querySelector("generalfeedback > text") ? q.querySelector("generalfeedback > text").textContent : "";
+                    let defaultGrade = q.getAttribute("defaultgrade") || "0";
+                    let ddMatchQuestion = new MatchingQuestion(name, text, generalFeedback, defaultGrade);
+                    let subquestions = q.querySelectorAll("subquestion");
+                    subquestions.forEach(sq => {
+                        let questionText = sq.querySelector("text").textContent;
+                        let answerText = sq.querySelectorAll("text")[1].textContent;
+                        ddMatchQuestion.addPair(questionText, answerText);
+                    });
+                    allQuestions.push(ddMatchQuestion);
                 });
 
                 console.log(allQuestions);
