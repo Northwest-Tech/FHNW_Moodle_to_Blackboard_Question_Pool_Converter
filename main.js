@@ -154,11 +154,11 @@ class TrueFalseQuestion {
         this.text = text;
         this.generalFeedback = generalFeedback;
         this.defaultGrade = defaultGrade;
-        this.answers = []; // array of {text: "", fraction: 100 or 0}
+        this.answers = []; // array of {text: "", fraction: 100 or 0, feedback: ""}
     }
 
-    addAnswer(text, fraction) {
-        this.answers.push({"text":text, "fraction":fraction});
+    addAnswer(text, fraction, feedback="") {
+        this.answers.push({"text":text, "fraction":fraction, "feedback":feedback});
     }
 
     getBBXMLText() {
@@ -238,22 +238,21 @@ class TrueFalseQuestion {
         </setOutcomeValue>
       </responseElse>
     </responseCondition>
-  </responseProcessing>
+  </responseProcessing>`
+
+    this.answers.forEach(ans=>{
+        if(ans.feedback && ans.feedback.length > 0){
+            result += `
+            <modalFeedback showHide="show" outcomeIdentifier="FEEDBACKBASIC" identifier="${ans.text}_fb">
+                <div>
+                  <div>${ans.feedback}</div>
+                </div>
+              </modalFeedback>
+            `
+        }
+    })
   
-  <modalFeedback showHide="show" outcomeIdentifier="FEEDBACKBASIC" identifier="correct_fb">
-    <div>
-      <div>Your answer is correct.</div>
-    </div>
-  </modalFeedback>
-  
-  <modalFeedback showHide="show" outcomeIdentifier="FEEDBACKBASIC" identifier="incorrect_fb">
-    <div>
-      <div>Your answer is incorrect.</div>
-    </div>
-  </modalFeedback>
-  
-</assessmentItem>
-        `
+    result += `</assessmentItem>`
         return result;
     }
 }
@@ -362,8 +361,9 @@ function readTextFile(file) {
             let answers = q.querySelectorAll("answer");
             answers.forEach(a => {
                 let answerText = a.querySelector("text").textContent;
+                let feedback = a.querySelector("feedback > text") ? a.querySelector("feedback > text").textContent : "";
                 let fraction = parseFloat(a.getAttribute("fraction")) || 0;
-                tfQuestion.addAnswer(answerText, fraction);
+                tfQuestion.addAnswer(answerText, fraction, feedback);
             });
             allQuestions.push(tfQuestion);
         });
