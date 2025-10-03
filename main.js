@@ -1,5 +1,6 @@
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
+var allQuestions = [];
 
 // Prevent default drag behaviors
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -54,7 +55,7 @@ function handleFiles(files) {
     }
 }
 
-var allQuestions = [];
+
 
 class EssayQuestion{
     constructor(name, text, defaultGrade) {
@@ -117,12 +118,113 @@ class MultipleChoiceQuestion{
     }
 
     getBBXMLText() {
-        //TODO Fix tha answers portion of this. 
 
-        let result = ` 
-            TODO: Redo 
-        `
+        let answers = ``;
+        let mapping = "";
+        let correctResponses = 0; 
+        for(let i = 0; i < this.answers.length; i++){
+            if(this.answers[i].fraction > 0){
+                correctResponses++;
+                answers += `<value>answer_${i + 1}</value>`;
+                mapping += ` <mapEntry mapKey="answer_${i + 1}" mappedValue="${this.answers[i].fraction / 100}"/>`
+            }else{
+                mapping += ` <mapEntry mapKey="answer_${i + 1}" mappedValue="0"/>`
+            }
 
+        }
+
+        let correctResponseArea = ` <correctResponse>
+                ${answers}
+            </correctResponse>`
+
+        if (correctResponses > 1){
+            correctResponseArea += `<mapping defaultValue="0">
+            ${mapping}
+            </mapping>
+            `
+        }
+        
+
+        let result = ` <?xml version='1.0' encoding='UTF-8'?>
+            <assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1"
+                            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                            xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/qti/qtiv2p1/imsqti_v2p1.xsd"
+                            adaptive="false" timeDependent="false" identifier="QUE_MC_001" title="${this.name}">
+            
+            <responseDeclaration cardinality="multiple" baseType="identifier" identifier="RESPONSE">
+                ${correctResponseArea}
+            </responseDeclaration>
+            
+            <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float">
+                <defaultValue>
+                <value>0</value>
+                </defaultValue>
+            </outcomeDeclaration>
+            
+            <outcomeDeclaration identifier="FEEDBACKBASIC" cardinality="single" baseType="identifier"/>
+            
+            <outcomeDeclaration identifier="MAXSCORE" cardinality="single" baseType="float">
+                <defaultValue>
+                <value>0</value>
+                </defaultValue>
+            </outcomeDeclaration>
+            
+            <itemBody>
+                <div>
+                <div>
+                    ${this.text}
+                </div>
+                </div>
+                <choiceInteraction responseIdentifier="RESPONSE" maxChoices="0" shuffle="false">`
+
+
+                for(let i = 0; i < this.answers.length; i++){
+                result += `<simpleChoice identifier="answer_${i + 1}" fixed="true">
+                        <div>
+                        <p>${this.answers[i].text}</p>
+                        </div>
+                    </simpleChoice>`;
+                }
+
+                result += `</choiceInteraction>
+            </itemBody>
+            
+            <responseProcessing>
+                <responseCondition>
+                <responseIf>
+                    <match>
+                    <variable identifier="RESPONSE"/>
+                    <correct identifier="RESPONSE"/>
+                    </match>
+                    <setOutcomeValue identifier="SCORE">
+                    <variable identifier="MAXSCORE"/>
+                    </setOutcomeValue>
+                    <setOutcomeValue identifier="FEEDBACKBASIC">
+                    <baseValue baseType="identifier">correct_fb</baseValue>
+                    </setOutcomeValue>
+                </responseIf>
+                <responseElse>
+                    <setOutcomeValue identifier="FEEDBACKBASIC">
+                    <baseValue baseType="identifier">incorrect_fb</baseValue>
+                    </setOutcomeValue>
+                </responseElse>
+                </responseCondition>
+            </responseProcessing>
+            
+            <modalFeedback showHide="show" outcomeIdentifier="FEEDBACKBASIC" identifier="correct_fb">
+                <div>
+                <div>Your answer is correct.</div>
+                </div>
+            </modalFeedback>
+            
+            <modalFeedback showHide="show" outcomeIdentifier="FEEDBACKBASIC" identifier="incorrect_fb">
+                <div>
+                <div>Your answer is incorrect.</div>
+                </div>
+            </modalFeedback>
+            
+            </assessmentItem>
+        `;
         return result;
     }
 }
@@ -141,8 +243,86 @@ class ShortAnswerQuestion{
     }
 
     getBBXMLText() {
-        let result =  `
-       TODO: Redo
+
+        let mapEntries = ""; 
+
+        this.answers.forEach(ans => {
+            mapEntries += `<mapEntry mapKey="${ans.text}" caseSensitive="false" mappedValue="100"/>`
+        });
+
+        let result =  `<?xml version='1.0' encoding='UTF-8'?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/qti/qtiv2p1/imsqti_v2p1.xsd"
+                adaptive="false" timeDependent="false" identifier="QUE_SA_001" title="">
+  
+  <responseDeclaration cardinality="single" baseType="string" identifier="RESPONSE">
+    <correctResponse>
+      <value>${this.answers[0].text}</value>
+    </correctResponse>
+    <mapping defaultValue="0">
+      ${mapEntries}
+    </mapping>
+  </responseDeclaration>
+  
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float">
+    <defaultValue>
+      <value>0</value>
+    </defaultValue>
+  </outcomeDeclaration>
+  
+  <outcomeDeclaration identifier="FEEDBACKBASIC" cardinality="single" baseType="identifier"/>
+  
+  <outcomeDeclaration identifier="MAXSCORE" cardinality="single" baseType="float">
+    <defaultValue>
+      <value>100.0</value>
+    </defaultValue>
+  </outcomeDeclaration>
+  
+  <itemBody>
+    <div>
+      <div>
+        ${this.text}
+      </div>
+    </div>
+    <textEntryInteraction responseIdentifier="RESPONSE" expectedLength="50"/>
+  </itemBody>
+  
+  <responseProcessing>
+    <setOutcomeValue identifier="SCORE">
+      <mapResponse identifier="RESPONSE"/>
+    </setOutcomeValue>
+    <responseCondition>
+      <responseIf>
+        <gte>
+          <variable identifier="SCORE"/>
+          <baseValue baseType="float">100.0</baseValue>
+        </gte>
+        <setOutcomeValue identifier="FEEDBACKBASIC">
+          <baseValue baseType="identifier">correct_fb</baseValue>
+        </setOutcomeValue>
+      </responseIf>
+      <responseElse>
+        <setOutcomeValue identifier="FEEDBACKBASIC">
+          <baseValue baseType="identifier">incorrect_fb</baseValue>
+        </setOutcomeValue>
+      </responseElse>
+    </responseCondition>
+  </responseProcessing>
+  
+  <modalFeedback showHide="show" outcomeIdentifier="FEEDBACKBASIC" identifier="correct_fb">
+    <div>
+      <div>Your answer is correct.</div>
+    </div>
+  </modalFeedback>
+  
+  <modalFeedback showHide="show" outcomeIdentifier="FEEDBACKBASIC" identifier="incorrect_fb">
+    <div>
+      <div>Your answer is incorrect.</div>
+    </div>
+  </modalFeedback>
+  
+</assessmentItem>
         `
         return result;
     }
@@ -289,6 +469,8 @@ function readTextFile(file) {
         // Work with my XML data here
 
         const parser = new DOMParser().parseFromString(contents, "text/xml");
+
+        allQuestions = []; // reset the questions array
 
         let questions = parser.querySelectorAll("question");
         console.log(questions.length);
