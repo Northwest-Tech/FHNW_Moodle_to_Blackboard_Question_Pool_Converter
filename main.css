@@ -46,3 +46,12 @@
             font-size: 48px;
             color: #999;
         }
+
+        section{
+            max-width: 590px;
+            margin-top: 20px;
+            background-color: #000000ee;
+            color: #fff;
+            padding: 15px;
+            border-radius: 10px;
+        }
