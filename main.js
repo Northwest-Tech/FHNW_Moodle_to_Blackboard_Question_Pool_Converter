@@ -451,9 +451,102 @@ class MatchingQuestion{
     }
 
     getBBXMLText() {
-        //TODO: Fix the pairs portion of this.
-        let result = `
-        TODO: Redo
+        let responses = ""; 
+        let matchset = ""; 
+        let rightSide = ""; 
+        this.pairs.forEach((pair, i) => {
+            responses += `<value>prompt_${i + 1} answer_${i + 1}</value>`
+            matchset += `<simpleAssociableChoice identifier="prompt_${i + 1}" matchMax="1">
+            <div>
+                <p>${pair.question}</p>
+            </div>
+            </simpleAssociableChoice>`;
+
+            rightSide += `<simpleAssociableChoice identifier="answer_${i + 1}" matchMax="1">
+            <div>
+                <p>${pair.answer}</p>
+            </div>
+            </simpleAssociableChoice>`;
+        });
+
+        let result = `<?xml version='1.0' encoding='UTF-8'?>
+        <assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1"
+                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                        xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/qti/qtiv2p1/imsqti_v2p1.xsd"
+                        adaptive="false" timeDependent="false" identifier="QUE_MATCH_2" title="${this.name}">
+        
+        <responseDeclaration cardinality="multiple" baseType="directedPair" identifier="RESPONSE">
+            <correctResponse>
+            ${responses}
+            </correctResponse>
+        </responseDeclaration>
+        
+        <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float">
+            <defaultValue>
+            <value>0</value>
+            </defaultValue>
+        </outcomeDeclaration>
+        
+        <outcomeDeclaration identifier="FEEDBACKBASIC" cardinality="single" baseType="identifier"/>
+        
+        <outcomeDeclaration identifier="MAXSCORE" cardinality="single" baseType="float">
+            <defaultValue>
+            <value>0</value>
+            </defaultValue>
+        </outcomeDeclaration>
+        
+        <itemBody>
+            <div>
+            <div>
+                ${this.text}
+            </div>
+            </div>
+            <matchInteraction responseIdentifier="RESPONSE" shuffle="false" maxAssociations="2">
+            <prompt>Match the items:</prompt>
+            <simpleMatchSet>
+                ${matchset}
+            </simpleMatchSet>
+            <simpleMatchSet>
+                ${rightSide}
+            </simpleMatchSet>
+            </matchInteraction>
+        </itemBody>
+        
+        <responseProcessing>
+            <responseCondition>
+            <responseIf>
+                <match>
+                <variable identifier="RESPONSE"/>
+                <correct identifier="RESPONSE"/>
+                </match>
+                <setOutcomeValue identifier="SCORE">
+                <variable identifier="MAXSCORE"/>
+                </setOutcomeValue>
+                <setOutcomeValue identifier="FEEDBACKBASIC">
+                <baseValue baseType="identifier">correct_fb</baseValue>
+                </setOutcomeValue>
+            </responseIf>
+            <responseElse>
+                <setOutcomeValue identifier="FEEDBACKBASIC">
+                <baseValue baseType="identifier">incorrect_fb</baseValue>
+                </setOutcomeValue>
+            </responseElse>
+            </responseCondition>
+        </responseProcessing>
+        
+        <modalFeedback showHide="show" outcomeIdentifier="FEEDBACKBASIC" identifier="correct_fb">
+            <div>
+            <div>Your answer is correct.</div>
+            </div>
+        </modalFeedback>
+        
+        <modalFeedback showHide="show" outcomeIdentifier="FEEDBACKBASIC" identifier="incorrect_fb">
+            <div>
+            <div>Your answer is incorrect.</div>
+            </div>
+        </modalFeedback>
+        
+        </assessmentItem>
         `
         return result;
     }
